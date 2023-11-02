@@ -289,7 +289,7 @@ def launch_setup(context, *args, **kwargs):
 
     pilz_cartesian_limits_yaml = load_yaml("moveitpy_pkg", "config/pilz_cartesian_limits.yaml")
     robot_description_planning["robot_description_planning"].update(pilz_cartesian_limits_yaml)
-    moveit_py_yaml["plan_request_params"].update({"planner_id": "RRTConnectkConfigDefault", "planning_time": 1.0, "planning_pipeline": "pilz_industrial_motion_planner"})
+    moveit_py_yaml["plan_request_params"].update({"planner_id": "RRTConnectkConfigDefault", "planning_time": 1.0, "planning_pipeline": "ompl"})
     # To initialize the planning with Pilz comment upper line and uncomment following line:
     # moveit_py_yaml["plan_request_params"].update({"planner_id": "PTP", "planning_time": 1.0, "planning_pipeline": "pilz_industrial_motion_planner"})
 

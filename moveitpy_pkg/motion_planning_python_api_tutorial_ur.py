@@ -59,8 +59,8 @@ def main():
     logger = get_logger("moveit_py.pose_goal")
 
     # instantiate MoveItPy instance and get planning component
-    panda = MoveItPy(node_name="moveit_py")
-    panda_arm = panda.get_planning_component("ur_manipulator")
+    ur = MoveItPy(node_name="moveit_py")
+    ur_manipulator = ur.get_planning_component("ur_manipulator")
     logger.info("MoveItPy instance created")
 
     ###########################################################################
@@ -68,42 +68,44 @@ def main():
     ###########################################################################
 
     # set plan start state using predefined state
-    # panda_arm.set_start_state(configuration_name="home")
-    panda_arm.set_start_state_to_current_state()
+    # ur_manipulator.set_start_state(configuration_name="home")
 
+    # set plan start state to current state of robot, command above fails planning if robot is not in home state.
+    ur_manipulator.set_start_state_to_current_state()
+    
     # set pose goal using predefined state
-    panda_arm.set_goal_state(configuration_name="up")
+    ur_manipulator.set_goal_state(configuration_name="up")
 
     # plan to goal
-    plan_and_execute(panda, panda_arm, logger, sleep_time=3.0)
+    plan_and_execute(ur, ur_manipulator, logger, sleep_time=3.0)
 
     ###########################################################################
     # Plan 2 - set goal state with RobotState object
     ###########################################################################
 
     # instantiate a RobotState instance using the current robot model
-    robot_model = panda.get_robot_model()
+    robot_model = ur.get_robot_model()
     robot_state = RobotState(robot_model)
 
     # randomize the robot state
     robot_state.set_to_random_positions()
 
     # set plan start state to current state
-    panda_arm.set_start_state_to_current_state()
+    ur_manipulator.set_start_state_to_current_state()
 
     # set goal state to the initialized robot state
     logger.info("Set goal state to the initialized robot state")
-    panda_arm.set_goal_state(robot_state=robot_state)
+    ur_manipulator.set_goal_state(robot_state=robot_state)
 
     # plan to goal
-    plan_and_execute(panda, panda_arm, logger, sleep_time=3.0)
+    plan_and_execute(ur, ur_manipulator, logger, sleep_time=3.0)
 
     ###########################################################################
     # Plan 3 - set goal state with PoseStamped message
     ###########################################################################
 
     # set plan start state to current state
-    panda_arm.set_start_state_to_current_state()
+    ur_manipulator.set_start_state_to_current_state()
 
     # set pose goal with PoseStamped message
     from geometry_msgs.msg import PoseStamped
@@ -114,17 +116,17 @@ def main():
     pose_goal.pose.position.x = 0.6
     pose_goal.pose.position.y = -0.3
     pose_goal.pose.position.z = 0.5
-    panda_arm.set_goal_state(pose_stamped_msg=pose_goal, pose_link="tool0")
+    ur_manipulator.set_goal_state(pose_stamped_msg=pose_goal, pose_link="tool0")
 
     # plan to goal
-    plan_and_execute(panda, panda_arm, logger, sleep_time=3.0)
+    plan_and_execute(ur, ur_manipulator, logger, sleep_time=3.0)
 
     ###########################################################################
     # Plan 4 - set goal state with constraints
     ###########################################################################
 
     # set plan start state to current state
-    panda_arm.set_start_state_to_current_state()
+    ur_manipulator.set_start_state_to_current_state()
 
     # set constraints message
     from moveit.core.kinematic_constraints import construct_joint_constraint
@@ -140,32 +142,32 @@ def main():
     robot_state.joint_positions = joint_values
     joint_constraint = construct_joint_constraint(
         robot_state=robot_state,
-        joint_model_group=panda.get_robot_model().get_joint_model_group("ur_manipulator"),
+        joint_model_group=ur.get_robot_model().get_joint_model_group("ur_manipulator"),
     )
-    panda_arm.set_goal_state(motion_plan_constraints=[joint_constraint])
+    ur_manipulator.set_goal_state(motion_plan_constraints=[joint_constraint])
 
     # plan to goal
-    plan_and_execute(panda, panda_arm, logger, sleep_time=3.0)
+    plan_and_execute(ur, ur_manipulator, logger, sleep_time=3.0)
 
     ###########################################################################
     # Plan 5 - Planning with Multiple Pipelines simultaneously
     ###########################################################################
 
     # set plan start state to current state
-    panda_arm.set_start_state_to_current_state()
+    ur_manipulator.set_start_state_to_current_state()
 
     # set pose goal with PoseStamped message
-    panda_arm.set_goal_state(configuration_name="test_configuration")
+    ur_manipulator.set_goal_state(configuration_name="test_configuration")
 
     # initialise multi-pipeline plan request parameters
     multi_pipeline_plan_request_params = MultiPipelinePlanRequestParameters(
-        panda, ["ompl_rrtc", "chomp_planner"] #, "chomp", "pilz_lin", "ompl_rrt_star"]
+        ur, ["ompl_rrtc", "chomp_planner"] #, "chomp", "pilz_lin", "ompl_rrt_star"]
     )
 
     # plan to goal
     plan_and_execute(
-        panda,
-        panda_arm,
+        ur,
+        ur_manipulator,
         logger,
         multi_plan_parameters=multi_pipeline_plan_request_params,
         sleep_time=3.0,
