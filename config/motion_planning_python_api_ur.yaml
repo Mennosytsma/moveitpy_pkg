@@ -9,6 +9,8 @@ planning_scene_monitor_options:
 
 planning_pipelines:
   pipeline_names: ["ompl", "chomp"] #, "pilz_industrial_motion_planner","chomp"] #, "chomp", "ompl_rrt_star"]
+  # request_adapters: ["default_planner_request_adapters/AddTimeOptimalParameterization", "default_planner_request_adapters/FixWorkspaceBounds"]
+  # start_state_max_bounds_error: 0.1
 
 plan_request_params:
   planning_attempts: 1
@@ -18,21 +20,28 @@ plan_request_params:
   max_acceleration_scaling_factor: 1.0
   planning_time: 1.0
 
-ompl:
-  planning_plugin: ompl_interface/OMPLPlanner  
-  # plan_request_params:  
-  #   planning_attempts: 1  # Number of attempts the planning pipeline tries to solve a given motion planning problem
-  #   planning_pipeline: ompl  # Name of the pipeline that is being used
-  #   planner_id: "RRTConnectkConfigDefault"  # Name of the specific planner to be used by the pipeline
-  #   max_velocity_scaling_factor: 1.0  # Velocity scaling parameter for the trajectory generation algorithm that is called (if configured) after the path planning
-  #   max_acceleration_scaling_factor: 1.0  # Acceleration scaling parameter for the trajectory generation algorithm that is called (if configured) after the path planning
-  #   planning_time: 1.0  
+# ompl:
+#   planning_plugin: ompl_interface/OMPLPlanner   
+#   request_adapters: "default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints"
+#   start_state_max_bounds_error: 0.1
+#   planner_id: "RRTConnectkConfigDefault"
+   
+#   plan_request_params:  
+#     planning_attempts: 1  # Number of attempts the planning pipeline tries to solve a given motion planning problem
+#     planning_pipeline: ompl  # Name of the pipeline that is being used
+#     planner_id: "RRTConnectkConfigDefault"  # Name of the specific planner to be used by the pipeline
+#     max_velocity_scaling_factor: 1.0  # Velocity scaling parameter for the trajectory generation algorithm that is called (if configured) after the path planning
+#     max_acceleration_scaling_factor: 1.0  # Acceleration scaling parameter for the trajectory generation algorithm that is called (if configured) after the path planning
+#     planning_time: 1.0  
 
 # pilz_industrial_motion_planner:
 #   planning_plugin: pilz_industrial_motion_planner/CommandPlanner
 
 chomp:
   planning_plugin: chomp_interface/CHOMPPlanner
+  request_adapters: "default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints"
+  start_state_max_bounds_error: 0.1
+  planner_id: "RRTConnectkConfigDefault"
 
 ompl_rrtc:  # Namespace for individual plan request
   plan_request_params:  # PlanRequestParameters similar to the ones that are used by the single pipeline planning of moveit_cpp

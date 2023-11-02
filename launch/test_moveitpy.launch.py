@@ -67,6 +67,9 @@ def launch_setup(context, *args, **kwargs):
     kinematics_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "default_kinematics.yaml"]
     )
+    # kinematics_params = PathJoinSubstitution(
+    #     [FindPackageShare("moveitpy_pkg"), "config", ur_type, "default_kinematics.yaml"]
+    # )
     physical_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "physical_parameters.yaml"]
     )
@@ -252,17 +255,42 @@ def launch_setup(context, *args, **kwargs):
             servo_params,
             robot_description,
             robot_description_semantic,
+            robot_description_kinematics,
         ],
         output="screen",
     )
 
     moveit_py_yaml = load_yaml("moveitpy_pkg", "config/motion_planning_python_api_ur.yaml")
+    py_ompl_planning_pipeline_config = {
+        "ompl": {
+            "planning_plugin": "ompl_interface/OMPLPlanner",
+            "request_adapters": """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
+            "start_state_max_bounds_error": 0.1, 
+            "planner_id": "RRTConnectkConfigDefault"
+        }
+    }    
+    py_ompl_planning_pipeline_config["ompl"].update(ompl_planning_yaml)
+    # default_planning = {"default_planning_pipeline": "ompl"}
+        # Planning Configuration
+    # py_planning_pipeline_config = {
+    #     "planning_pipelines": ["ompl"],  # <- Newly added
+    #     "default_planning_pipeline": "ompl",  # <- Newly added
+    #     "ompl": {},  # <- Newly added
+    #     "move_group": {},
+    #     "robot_description_planning":{},
+    # }
+    # py_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
+    # py_planning_pipeline_config["ompl"].update(moveit_py_yaml)  # <- Newly added
 
     moveit_args_not_concatenated = [
         moveit_py_yaml,
         robot_description,
         robot_description_semantic,
-        {"robot_description_kinematics": robot_description_kinematics.perform(context)},
+        {"robot_description_kinematics": load_yaml("moveitpy_pkg", "config/kinematics.yaml")},
+        # default_planning,
+        py_ompl_planning_pipeline_config,
+        # py_planning_pipeline_config,
+        # {"robot_description_kinematics": robot_description_kinematics.perform(context)},
         # {"robot_description": robot_description.perform(context)},
         # {"robot_description_semantic": robot_description_semantic.perform(context)},
         # load_yaml(Path(robot_description_kinematics.perform(context))),
@@ -273,7 +301,7 @@ def launch_setup(context, *args, **kwargs):
         robot_description_planning,
         moveit_controllers,
         planning_scene_monitor_parameters,
-        ompl_planning_pipeline_config,
+        # ompl_planning_pipeline_config,
         trajectory_execution,
         {
             "publish_robot_description": True,
@@ -283,7 +311,7 @@ def launch_setup(context, *args, **kwargs):
             "publish_transforms_updates": True,
         },
         # ompl,
-        # {"planning_pipeline": {"planning_plugin": "ompl"}},
+        {"planning_pipeline": {"planning_plugin": "ompl"}},
     ]
 
     # Concatenate all dictionaries together, else moveitpy won't read all parameters
