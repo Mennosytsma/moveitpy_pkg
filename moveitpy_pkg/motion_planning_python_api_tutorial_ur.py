@@ -110,9 +110,9 @@ def main():
 
     pose_goal = PoseStamped()
     pose_goal.header.frame_id = "base_link"
-    pose_goal.pose.orientation.w = 1.0
-    pose_goal.pose.position.x = 0.28
-    pose_goal.pose.position.y = -0.2
+    pose_goal.pose.orientation.w = -1.0
+    pose_goal.pose.position.x = 0.6
+    pose_goal.pose.position.y = -0.3
     pose_goal.pose.position.z = 0.5
     panda_arm.set_goal_state(pose_stamped_msg=pose_goal, pose_link="tool0")
 

@@ -67,9 +67,6 @@ def launch_setup(context, *args, **kwargs):
     kinematics_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "default_kinematics.yaml"]
     )
-    # kinematics_params = PathJoinSubstitution(
-    #     [FindPackageShare("moveitpy_pkg"), "config", ur_type, "default_kinematics.yaml"]
-    # )
     physical_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "physical_parameters.yaml"]
     )
@@ -260,8 +257,8 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
     )
 
-    moveit_py_yaml = load_yaml("moveitpy_pkg", "config/motion_planning_python_api_ur.yaml")
-    py_ompl_planning_pipeline_config = {
+    moveit_py_yaml = load_yaml("moveit2_tutorials", "config/motion_planning_python_api_tutorial.yaml")
+    ur_ompl_planning_pipeline_config = {
         "ompl": {
             "planning_plugin": "ompl_interface/OMPLPlanner",
             "request_adapters": """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
@@ -269,39 +266,44 @@ def launch_setup(context, *args, **kwargs):
             "planner_id": "RRTConnectkConfigDefault"
         }
     }    
-    py_ompl_planning_pipeline_config["ompl"].update(ompl_planning_yaml)
-    # default_planning = {"default_planning_pipeline": "ompl"}
-        # Planning Configuration
-    # py_planning_pipeline_config = {
-    #     "planning_pipelines": ["ompl"],  # <- Newly added
-    #     "default_planning_pipeline": "ompl",  # <- Newly added
-    #     "ompl": {},  # <- Newly added
-    #     "move_group": {},
-    #     "robot_description_planning":{},
-    # }
-    # py_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
-    # py_planning_pipeline_config["ompl"].update(moveit_py_yaml)  # <- Newly added
+    ur_ompl_planning_pipeline_config["ompl"].update(ompl_planning_yaml)
+
+    # Not tested with CHOMP and Pilz, just added this to be able to use the original moveit2_tutorials yaml file.
+    ur_chomp_planning_pipeline_config = {
+        "chomp": {
+            "planning_plugin": "chomp_interface/CHOMPPlanner",
+            "request_adapters": "default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints",
+            "start_state_max_bounds_error": 0.1,
+            "planner_id": "RRTConnectkConfigDefault",
+        }
+    }
+
+    ur_pilz_planning_pipeline_config = {
+        "pilz_industrial_motion_planner": {
+            "planning_plugin": "pilz_industrial_motion_planner/CommandPlanner",
+            "request_adapters": "default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints",
+            "default_planner_config": "PTP",
+            "planner_id": "PTP",
+        }
+    }
+
+    pilz_cartesian_limits_yaml = load_yaml("moveitpy_pkg", "config/pilz_cartesian_limits.yaml")
+    robot_description_planning["robot_description_planning"].update(pilz_cartesian_limits_yaml)
+    moveit_py_yaml["plan_request_params"].update({"planner_id": "RRTConnectkConfigDefault", "planning_time": 1.0, "planning_pipeline": "pilz_industrial_motion_planner"})
+    # To initialize the planning with Pilz comment upper line and uncomment following line:
+    # moveit_py_yaml["plan_request_params"].update({"planner_id": "PTP", "planning_time": 1.0, "planning_pipeline": "pilz_industrial_motion_planner"})
 
     moveit_args_not_concatenated = [
         moveit_py_yaml,
         robot_description,
         robot_description_semantic,
         {"robot_description_kinematics": load_yaml("moveitpy_pkg", "config/kinematics.yaml")},
-        # default_planning,
-        py_ompl_planning_pipeline_config,
-        # py_planning_pipeline_config,
-        # {"robot_description_kinematics": robot_description_kinematics.perform(context)},
-        # {"robot_description": robot_description.perform(context)},
-        # {"robot_description_semantic": robot_description_semantic.perform(context)},
-        # load_yaml(Path(robot_description_kinematics.perform(context))),
-        # load_yaml(Path(moveit_joint_limits_file.perform(context))),
-        # load_yaml(
-        #     str(moveit_config_package.perform(context)),
-        #     os.path.join("config", str(moveit_joint_limits_file.perform(context)))),
+        ur_ompl_planning_pipeline_config,
+        ur_chomp_planning_pipeline_config,
+        ur_pilz_planning_pipeline_config,
         robot_description_planning,
         moveit_controllers,
         planning_scene_monitor_parameters,
-        # ompl_planning_pipeline_config,
         trajectory_execution,
         {
             "publish_robot_description": True,
@@ -310,38 +312,21 @@ def launch_setup(context, *args, **kwargs):
             "publish_state_updates": True,
             "publish_transforms_updates": True,
         },
-        # ompl,
-        {"planning_pipeline": {"planning_plugin": "ompl"}},
     ]
 
     # Concatenate all dictionaries together, else moveitpy won't read all parameters
     moveit_args = dict()
     for d in moveit_args_not_concatenated:
         moveit_args.update(d)
-
-    print(moveit_args)
-
-
-    # moveit_py_yaml = load_yaml("moveitpy_pkg", "config/motion_planning_python_api_ur.yaml")
-    
-    moveit_py_args = dict()
-    for d in [moveit_controllers, moveit_py_yaml]:
-        moveit_py_args.update(d)
-        
+            
     moveit_py_node = Node(
         name="moveit_py",
         package="moveitpy_pkg",
         executable="motion_planning_python_api_tutorial_ur",
         output="both",
-        parameters=[
-            # Adding the following line breaks it
-            #{"test": "test"},
-            moveit_args,
-            ]        
+        parameters=[moveit_args]        
     )
     
-
-
     nodes_to_start = [move_group_node, rviz_node, servo_node, moveit_py_node]
 
     return nodes_to_start

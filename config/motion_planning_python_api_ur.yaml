@@ -37,11 +37,11 @@ plan_request_params:
 # pilz_industrial_motion_planner:
 #   planning_plugin: pilz_industrial_motion_planner/CommandPlanner
 
-chomp:
-  planning_plugin: chomp_interface/CHOMPPlanner
-  request_adapters: "default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints"
-  start_state_max_bounds_error: 0.1
-  planner_id: "RRTConnectkConfigDefault"
+# chomp:
+#   planning_plugin: chomp_interface/CHOMPPlanner
+#   request_adapters: "default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints"
+#   start_state_max_bounds_error: 0.1
+#   planner_id: "RRTConnectkConfigDefault"
 
 ompl_rrtc:  # Namespace for individual plan request
   plan_request_params:  # PlanRequestParameters similar to the ones that are used by the single pipeline planning of moveit_cpp
